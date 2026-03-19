@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# PDF output files
+*_sealed.pdf
+output.pdf
+
+# Test files (optional, can be regenerated)
+test.pdf
+stamp.png
+
+# IDE
+.vscode/
+.idea/
