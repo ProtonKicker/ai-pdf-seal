@@ -15,12 +15,34 @@
 
 ## 参数说明
 
-| 参数 | 说明 |
-|------|------|
-| PDF文件 | 需要盖章的 PDF 文件路径 |
-| 印章图片 | 印章图片文件路径（支持 PNG、JPG 等格式） |
-| 印章大小 | 印章图片的尺寸（宽度和高度） |
-| 印章位置 | 印章在 PDF 页面中的坐标位置（X、Y 坐标） |
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| --pdf, -p | 是 | PDF 文件路径 |
+| --image, -i | 是 | 印章图片路径 |
+| --width | 是 | 印章宽度（像素） |
+| --height | 是 | 印章高度（像素） |
+| --x | 是 | 印章 X 坐标 |
+| --y | 是 | 印章 Y 坐标 |
+| --output, -o | 否 | 输出文件路径 |
+
+## 使用示例
+
+### 基本用法
+
+```bash
+python main.py --pdf contract.pdf --image stamp.png --width 100 --height 100 --x 400 --y 100
+```
+
+### 指定输出文件
+
+```bash
+python main.py -p contract.pdf -i stamp.png --width 100 --height 100 --x 400 --y 100 -o signed_contract.pdf
+```
+
+### 参数说明
+
+- `width` 和 `height`：印章图片的目标尺寸（像素）
+- `x` 和 `y`：印章在 PDF 页面中的坐标（左下角为原点 (0, 0)）
 
 ## 使用场景
 
@@ -30,4 +52,19 @@
 
 ## 技术栈
 
-（待补充）
+- **Python 3.8+**
+- [pypdf](https://github.com/py-pdf/pypdf) - PDF 文件处理
+- [Pillow](https://github.com/python-pillow/Pillow) - 图片处理
+- [reportlab](https://www.reportlab.com/) - PDF 生成
+
+## 安装
+
+```bash
+pip install -e .
+```
+
+或直接运行：
+
+```bash
+pip install pypdf Pillow reportlab
+```
