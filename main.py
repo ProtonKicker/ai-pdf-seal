@@ -2,7 +2,12 @@ import argparse
 import os
 import sys
 
+import yaml
+
 from src.pdf_processor import PdfSealProcessor
+
+
+DEFAULT_CONFIG_FILE = "config.yaml"
 
 
 def is_already_sealed(pdf_path: str) -> bool:
@@ -40,12 +45,36 @@ def process_single(pdf_path: str, image_path: str, width: int, height: int, x: i
     return processor.process(output_path)
 
 
+def load_config(config_path: str) -> dict:
+    if not os.path.exists(config_path):
+        return {}
+
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f) or {}
+
+
+def merge_args_with_config(args, config: dict):
+    args_dict = vars(args)
+
+    for key, value in config.items():
+        if key in args_dict and args_dict.get(key) is None:
+            setattr(args, key, value)
+
+    return args
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="AI PDF Seal - 给 PDF 文件添加图片印章"
     )
 
-    pdf_group = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument(
+        "--config", "-c",
+        default=DEFAULT_CONFIG_FILE,
+        help=f"配置文件路径（默认: {DEFAULT_CONFIG_FILE}）"
+    )
+
+    pdf_group = parser.add_mutually_exclusive_group(required=False)
     pdf_group.add_argument(
         "--pdf", "-p",
         help="PDF 文件路径"
@@ -57,31 +86,26 @@ def main():
 
     parser.add_argument(
         "--image", "-i",
-        required=True,
         help="印章图片路径"
     )
     parser.add_argument(
         "--width",
         type=int,
-        required=True,
         help="印章宽度（像素）"
     )
     parser.add_argument(
         "--height",
         type=int,
-        required=True,
         help="印章高度（像素）"
     )
     parser.add_argument(
         "--x",
         type=int,
-        required=True,
         help="印章 X 坐标"
     )
     parser.add_argument(
         "--y",
         type=int,
-        required=True,
         help="印章 Y 坐标"
     )
     parser.add_argument(
@@ -89,10 +113,25 @@ def main():
         action="store_true",
         help="强制覆盖已盖章的文件（默认跳过）"
     )
+    parser.add_argument(
+        "--output", "-o",
+        help="输出文件路径（仅单文件模式有效）"
+    )
 
     args = parser.parse_args()
 
+    config = load_config(args.config)
+    args = merge_args_with_config(args, config)
+
     try:
+        if not args.pdf and not args.dir:
+            parser.print_help()
+            sys.exit(1)
+
+        if not args.image or args.width is None or args.height is None or args.x is None or args.y is None:
+            print("错误: 请提供所有必需参数（image, width, height, x, y）或在配置文件中设置", file=sys.stderr)
+            sys.exit(1)
+
         if args.dir:
             dir_path = args.dir
             if not os.path.isdir(dir_path):
