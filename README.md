@@ -17,13 +17,14 @@
 
 | 参数 | 必填 | 说明 |
 |------|------|------|
-| --pdf, -p | 是 | PDF 文件路径 |
+| --pdf, -p | 否 | PDF 文件路径（与 --dir 二选一） |
+| --dir, -d | 否 | 目录路径（批量处理模式） |
 | --image, -i | 是 | 印章图片路径 |
 | --width | 是 | 印章宽度（像素） |
 | --height | 是 | 印章高度（像素） |
 | --x | 是 | 印章 X 坐标 |
 | --y | 是 | 印章 Y 坐标 |
-| --output, -o | 否 | 输出文件路径 |
+| --output, -o | 否 | 输出文件路径（仅单文件模式有效） |
 
 ## 使用示例
 
@@ -38,6 +39,14 @@ python main.py --pdf contract.pdf --image stamp.png --width 100 --height 100 --x
 ```bash
 python main.py -p contract.pdf -i stamp.png --width 100 --height 100 --x 400 --y 100 -o signed_contract.pdf
 ```
+
+### 批量处理目录
+
+```bash
+python main.py -d ./pdfs -i stamp.png --width 100 --height 100 --x 400 --y 100
+```
+
+批量处理时会自动跳过已盖章的文件（检测 `*_sealed.pdf` 文件是否存在）。
 
 ### 参数说明
 

@@ -8,10 +8,6 @@ __pycache__/
 *_sealed.pdf
 output.pdf
 
-# Test files (optional, can be regenerated)
-test.pdf
-stamp.png
-
 # IDE
 .vscode/
 .idea/
