@@ -84,6 +84,11 @@ def main():
         required=True,
         help="印章 Y 坐标"
     )
+    parser.add_argument(
+        "--force", "-f",
+        action="store_true",
+        help="强制覆盖已盖章的文件（默认跳过）"
+    )
 
     args = parser.parse_args()
 
@@ -109,7 +114,7 @@ def main():
             print("-" * 40)
 
             for pdf_path in pdf_files:
-                if is_already_sealed(pdf_path):
+                if is_already_sealed(pdf_path) and not args.force:
                     print(f"[跳过] {os.path.basename(pdf_path)} (已盖章)")
                     skipped += 1
                     continue
