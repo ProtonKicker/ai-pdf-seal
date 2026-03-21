@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import sys
 
@@ -8,6 +9,12 @@ from src.pdf_processor import PdfSealProcessor
 
 
 DEFAULT_CONFIG_FILE = "config.yaml"
+
+logging.basicConfig(
+    format="[%(levelname)s] %(message)s",
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 
 def is_already_sealed(pdf_path: str) -> bool:
@@ -26,6 +33,8 @@ def scan_directory(dir_path: str) -> list:
 
 
 def process_single(pdf_path: str, image_path: str, width: int, height: int, x: int, y: int, output_dir: str = None) -> str:
+    logger.debug(f"创建 PdfSealProcessor: pdf={pdf_path}, image={image_path}, size={width}x{height}, pos=({x}, {y})")
+
     processor = PdfSealProcessor(
         pdf_path=pdf_path,
         image_path=image_path,
@@ -42,6 +51,7 @@ def process_single(pdf_path: str, image_path: str, width: int, height: int, x: i
     else:
         output_path = None
 
+    logger.debug(f"输出路径: {output_path}")
     return processor.process(output_path)
 
 
@@ -61,6 +71,26 @@ def merge_args_with_config(args, config: dict):
             setattr(args, key, value)
 
     return args
+
+
+def log_config(args):
+    logger.info("=" * 50)
+    logger.info("AI PDF Seal 开始运行")
+    logger.info("=" * 50)
+    logger.info(f"配置文件: {args.config}")
+
+    if args.directory:
+        logger.info(f"运行模式: 批量处理")
+        logger.info(f"目录: {args.directory}")
+    else:
+        logger.info(f"运行模式: 单文件处理")
+        logger.info(f"文件: {args.pdf}")
+
+    logger.info(f"印章图片: {args.image}")
+    logger.info(f"印章尺寸: {args.width}x{args.height}")
+    logger.info(f"印章位置: ({args.x}, {args.y})")
+    logger.info(f"强制覆盖: {args.force}")
+    logger.info("=" * 50)
 
 
 def main():
@@ -129,19 +159,21 @@ def main():
             sys.exit(1)
 
         if not args.image or args.width is None or args.height is None or args.x is None or args.y is None:
-            print("错误: 请提供所有必需参数（image, width, height, x, y）或在配置文件中设置", file=sys.stderr)
+            logger.error("请提供所有必需参数（image, width, height, x, y）或在配置文件中设置")
             sys.exit(1)
+
+        log_config(args)
 
         if args.directory:
             dir_path = args.directory
             if not os.path.isdir(dir_path):
-                print(f"错误: 目录不存在: {dir_path}", file=sys.stderr)
+                logger.error(f"目录不存在: {dir_path}")
                 sys.exit(1)
 
             pdf_files = scan_directory(dir_path)
 
             if not pdf_files:
-                print(f"目录中没有需要处理的 PDF 文件")
+                logger.warning("目录中没有需要处理的 PDF 文件")
                 return
 
             total = len(pdf_files)
@@ -149,12 +181,14 @@ def main():
             skipped = 0
             failed = 0
 
-            print(f"开始批量处理，共 {total} 个文件")
-            print("-" * 40)
+            logger.info(f"开始批量处理，共 {total} 个文件")
 
-            for pdf_path in pdf_files:
+            for i, pdf_path in enumerate(pdf_files, 1):
+                filename = os.path.basename(pdf_path)
+                logger.info(f"[{i}/{total}] 处理: {filename}")
+
                 if is_already_sealed(pdf_path) and not args.force:
-                    print(f"[跳过] {os.path.basename(pdf_path)} (已盖章)")
+                    logger.info(f"[{i}/{total}] 跳过: {filename} (已盖章)")
                     skipped += 1
                     continue
 
@@ -168,14 +202,16 @@ def main():
                         args.y,
                         dir_path
                     )
-                    print(f"[完成] {os.path.basename(pdf_path)} -> {os.path.basename(output_path)}")
+                    logger.info(f"[{i}/{total}] 完成: {filename} -> {os.path.basename(output_path)}")
                     processed += 1
                 except Exception as e:
-                    print(f"[失败] {os.path.basename(pdf_path)}: {e}", file=sys.stderr)
+                    logger.error(f"[{i}/{total}] 失败: {filename}")
+                    logger.error(f"错误信息: {e}")
+                    logger.exception("堆栈信息:")
                     failed += 1
 
-            print("-" * 40)
-            print(f"处理完成！总计: {total}, 已处理: {processed}, 已跳过: {skipped}, 失败: {failed}")
+            logger.info("=" * 50)
+            logger.info(f"处理完成！总计: {total}, 已处理: {processed}, 已跳过: {skipped}, 失败: {failed}")
 
         else:
             processor = PdfSealProcessor(
@@ -187,16 +223,17 @@ def main():
                 y=args.y
             )
             output_path = processor.process(args.output)
-            print(f"成功！输出文件: {output_path}")
+            logger.info(f"成功！输出文件: {output_path}")
 
     except FileNotFoundError as e:
-        print(f"错误: {e}", file=sys.stderr)
+        logger.error(f"文件不存在: {e}")
         sys.exit(1)
     except ValueError as e:
-        print(f"错误: {e}", file=sys.stderr)
+        logger.error(f"参数错误: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"未知错误: {e}", file=sys.stderr)
+        logger.error(f"未知错误: {e}")
+        logger.exception("堆栈信息:")
         sys.exit(1)
 
 
