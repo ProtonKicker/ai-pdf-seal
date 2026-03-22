@@ -1,9 +1,7 @@
 directory: .
-
+force: true
+height: 50
 image: stamp.png
 width: 50
-height: 50
 x: 450
 y: 150
-
-force: true
