@@ -192,6 +192,11 @@ output.pdf
 # 日志
 logs/
 
+# 构建输出
+build/
+dist/
+*.spec
+
 # 测试输出
 tests/__pycache__/
 .pytest_cache/
@@ -201,7 +206,7 @@ tests/__pycache__/
 .idea/
 ```
 
-### 5.2 提交规范
+### 6.2 提交规范
 
 - 提交信息要清晰描述变更内容
 - 每次功能完成后进行提交
