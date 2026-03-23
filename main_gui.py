@@ -12,19 +12,6 @@ from src.pdf_processor import PdfSealProcessor
 DEFAULT_CONFIG_FILE = "config.yaml"
 
 
-class TextHandler:
-    def __init__(self, text_widget):
-        self.text_widget = text_widget
-
-    def write(self, message):
-        self.text_widget.insert(tk.END, message)
-        self.text_widget.see(tk.END)
-        self.text_widget.update()
-
-    def flush(self):
-        pass
-
-
 class GuiLogHandler:
     def __init__(self, text_widget, level="INFO"):
         self.text_widget = text_widget
@@ -47,13 +34,21 @@ class PdfSealGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("AI PDF Seal - 批量盖章工具")
-        self.root.geometry("600x550")
+        self.root.geometry("650x580")
         self.root.resizable(False, False)
 
+        self.style_config()
         self.config = self.load_config()
-
         self.create_widgets()
         self.load_config_to_ui()
+
+    def style_config(self):
+        style = ttk.Style()
+        style.configure("Title.TLabel", font=("Microsoft YaHei", 12, "bold"))
+        style.configure("Normal.TLabel", font=("Microsoft YaHei", 10))
+        style.configure("TEntry", font=("Microsoft YaHei", 10))
+        style.configure("TButton", font=("Microsoft YaHei", 10))
+        style.configure("Accent.TButton", font=("Microsoft YaHei", 11, "bold"))
 
     def load_config(self):
         if os.path.exists(DEFAULT_CONFIG_FILE):
@@ -91,55 +86,80 @@ class PdfSealGUI:
         self.y_var = tk.IntVar(value=150)
         self.force_var = tk.BooleanVar(value=False)
 
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame = ttk.Frame(self.root, padding="15")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        title_label = ttk.Label(main_frame, text="AI PDF Seal - 批量盖章工具", style="Title.TLabel")
+        title_label.pack(pady=(0, 15))
+
+        config_frame = ttk.LabelFrame(main_frame, text="配置参数", padding="12")
+        config_frame.pack(fill=tk.X, pady=(0, 12))
 
         row = 0
-
-        ttk.Label(main_frame, text="目录选择:").grid(row=row, column=0, sticky=tk.W, pady=5)
-        ttk.Entry(main_frame, textvariable=self.dir_var, width=40).grid(row=row, column=1, pady=5, padx=5)
-        ttk.Button(main_frame, text="浏览", command=self.browse_directory).grid(row=row, column=2, pady=5)
-
-        row += 1
-        ttk.Label(main_frame, text="印章图片:").grid(row=row, column=0, sticky=tk.W, pady=5)
-        ttk.Entry(main_frame, textvariable=self.image_var, width=40).grid(row=row, column=1, pady=5, padx=5)
-        ttk.Button(main_frame, text="浏览", command=self.browse_image).grid(row=row, column=2, pady=5)
+        ttk.Label(config_frame, text="目录选择:", style="Normal.TLabel").grid(row=row, column=0, sticky=tk.W, pady=8)
+        ttk.Entry(config_frame, textvariable=self.dir_var, width=45).grid(row=row, column=1, padx=8, pady=8, sticky=(tk.W, tk.E))
+        ttk.Button(config_frame, text="浏览", command=self.browse_directory, width=8).grid(row=row, column=2, pady=8)
 
         row += 1
-        ttk.Label(main_frame, text="宽度:").grid(row=row, column=0, sticky=tk.W, pady=5)
-        ttk.Entry(main_frame, textvariable=self.width_var, width=10).grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(main_frame, text="高度:").grid(row=row, column=1, sticky=tk.W, padx=(30, 5), pady=5)
-        ttk.Entry(main_frame, textvariable=self.height_var, width=10).grid(row=row, column=1, sticky=tk.W, padx=(80, 5), pady=5)
+        ttk.Label(config_frame, text="印章图片:", style="Normal.TLabel").grid(row=row, column=0, sticky=tk.W, pady=8)
+        ttk.Entry(config_frame, textvariable=self.image_var, width=45).grid(row=row, column=1, padx=8, pady=8, sticky=(tk.W, tk.E))
+        ttk.Button(config_frame, text="浏览", command=self.browse_image, width=8).grid(row=row, column=2, pady=8)
 
         row += 1
-        ttk.Label(main_frame, text="X坐标:").grid(row=row, column=0, sticky=tk.W, pady=5)
-        ttk.Entry(main_frame, textvariable=self.x_var, width=10).grid(row=row, column=1, sticky=tk.W, padx=5, pady=5)
-        ttk.Label(main_frame, text="Y坐标:").grid(row=row, column=1, sticky=tk.W, padx=(30, 5), pady=5)
-        ttk.Entry(main_frame, textvariable=self.y_var, width=10).grid(row=row, column=1, sticky=tk.W, padx=(80, 5), pady=5)
+        size_frame = ttk.Frame(config_frame)
+        size_frame.grid(row=row, column=0, columnspan=3, sticky=tk.W, pady=8)
+
+        ttk.Label(size_frame, text="印章尺寸:", style="Normal.TLabel").pack(side=tk.LEFT)
+        ttk.Label(size_frame, text="宽度:").pack(side=tk.LEFT, padx=(15, 5))
+        ttk.Entry(size_frame, textvariable=self.width_var, width=8).pack(side=tk.LEFT)
+        ttk.Label(size_frame, text="像素").pack(side=tk.LEFT, padx=(5, 15))
+        ttk.Label(size_frame, text="高度:").pack(side=tk.LEFT)
+        ttk.Entry(size_frame, textvariable=self.height_var, width=8).pack(side=tk.LEFT)
+        ttk.Label(size_frame, text="像素").pack(side=tk.LEFT, padx=(5, 0))
 
         row += 1
-        ttk.Checkbutton(main_frame, text="强制覆盖已盖章文件", variable=self.force_var,
-                       command=self.on_config_change).grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=10)
+        pos_frame = ttk.Frame(config_frame)
+        pos_frame.grid(row=row, column=0, columnspan=3, sticky=tk.W, pady=8)
+
+        ttk.Label(pos_frame, text="印章位置:", style="Normal.TLabel").pack(side=tk.LEFT)
+        ttk.Label(pos_frame, text="X坐标:").pack(side=tk.LEFT, padx=(15, 5))
+        ttk.Entry(pos_frame, textvariable=self.x_var, width=8).pack(side=tk.LEFT)
+        ttk.Label(pos_frame, text="像素").pack(side=tk.LEFT, padx=(5, 15))
+        ttk.Label(pos_frame, text="Y坐标:").pack(side=tk.LEFT)
+        ttk.Entry(pos_frame, textvariable=self.y_var, width=8).pack(side=tk.LEFT)
+        ttk.Label(pos_frame, text="像素").pack(side=tk.LEFT, padx=(5, 0))
 
         row += 1
-        self.run_button = ttk.Button(main_frame, text="立即执行", command=self.run_seal, style="Accent.TButton")
-        self.run_button.grid(row=row, column=0, columnspan=3, pady=15, ipadx=30, ipady=5)
+        ttk.Checkbutton(config_frame, text="强制覆盖已盖章文件", variable=self.force_var,
+                       command=self.on_config_change).grid(row=row, column=0, columnspan=3, sticky=tk.W, pady=10)
 
-        ttk.Separator(main_frame, orient='horizontal').grid(row=row+1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+        row += 1
+        self.run_button = ttk.Button(config_frame, text="立即执行", command=self.run_seal, style="Accent.TButton")
+        self.run_button.grid(row=row, column=0, columnspan=3, pady=15, ipadx=40, ipady=8)
 
-        row += 2
-        ttk.Label(main_frame, text="运行日志:").grid(row=row, column=0, sticky=tk.W, pady=5)
-        self.log_text = tk.Text(main_frame, width=65, height=12, state='disabled')
-        self.log_text.grid(row=row+1, column=0, columnspan=3, pady=5)
+        log_frame = ttk.LabelFrame(main_frame, text="运行日志", padding="10")
+        log_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 0))
 
-        for child in main_frame.winfo_children():
-            child.bind('<<Modified>>', lambda e: self.on_config_change())
+        self.log_text = tk.Text(log_frame, width=70, height=14, state='disabled',
+                                font=("Consolas", 9), wrap=tk.WORD)
+        self.log_text.pack(fill=tk.BOTH, expand=True)
+
+        scrollbar = ttk.Scrollbar(self.log_text, command=self.log_text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.log_text.config(yscrollcommand=scrollbar.set)
+
+        self.dir_var.trace_add("write", lambda *args: self.on_config_change())
+        self.image_var.trace_add("write", lambda *args: self.on_config_change())
+        self.width_var.trace_add("write", lambda *args: self.on_config_change())
+        self.height_var.trace_add("write", lambda *args: self.on_config_change())
+        self.x_var.trace_add("write", lambda *args: self.on_config_change())
+        self.y_var.trace_add("write", lambda *args: self.on_config_change())
+        self.force_var.trace_add("write", lambda *args: self.on_config_change())
 
     def browse_directory(self):
         directory = filedialog.askdirectory()
         if directory:
             self.dir_var.set(directory)
-            self.on_config_change()
 
     def browse_image(self):
         image_file = filedialog.askopenfilename(
@@ -148,9 +168,8 @@ class PdfSealGUI:
         )
         if image_file:
             self.image_var.set(image_file)
-            self.on_config_change()
 
-    def on_config_change(self):
+    def on_config_change(self, *args):
         self.config['directory'] = self.dir_var.get()
         self.config['image'] = self.image_var.get()
         self.config['width'] = self.width_var.get()
