@@ -57,8 +57,8 @@ class PdfSealGUI:
         return {
             'directory': '',
             'image': '',
-            'width': 50,
-            'height': 50,
+            'width': 100,
+            'height': 100,
             'x': 450,
             'y': 150,
             'force': False
@@ -72,8 +72,8 @@ class PdfSealGUI:
         self._loading_config = True
         self.dir_var.set(self.config.get('directory', ''))
         self.image_var.set(self.config.get('image', ''))
-        self.width_var.set(self.config.get('width', 50))
-        self.height_var.set(self.config.get('height', 50))
+        self.width_var.set(self.config.get('width', 100))
+        self.height_var.set(self.config.get('height', 100))
         self.x_var.set(self.config.get('x', 450))
         self.y_var.set(self.config.get('y', 150))
         self.force_var.set(self.config.get('force', False))
@@ -82,8 +82,8 @@ class PdfSealGUI:
     def create_widgets(self):
         self.dir_var = tk.StringVar()
         self.image_var = tk.StringVar()
-        self.width_var = tk.IntVar(value=50)
-        self.height_var = tk.IntVar(value=50)
+        self.width_var = tk.IntVar(value=100)
+        self.height_var = tk.IntVar(value=100)
         self.x_var = tk.IntVar(value=450)
         self.y_var = tk.IntVar(value=150)
         self.force_var = tk.BooleanVar(value=False)
